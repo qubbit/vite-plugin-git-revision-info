@@ -252,27 +252,27 @@ async function generateGitData(options: ModifiedOptions) {
 
   return {
     name: 'vite-plugin-git-revision-info',
-    apply: 'build',
     async config() {
       return {
-        // 全局变量，可以在整个应用中使用
         define: {
-          __GIT_REVISION_INFO__: JSON.stringify(await generateGitData(mergeOptions)),
+          __GIT_REVISION_INFO__: await generateGitData(mergeOptions),
         },
       };
     },
 
     async transformIndexHtml() {
-      const HtmlStr = `const ${mergeOptions.customVar} = ${JSON.stringify(await generateGitData(mergeOptions))};
-      ${mergeOptions.consoleDirectly ? `console.log(${JSON.stringify(await generateGitData(mergeOptions))})` : ''}
+      const gitData = await generateGitData(mergeOptions);
+      const HtmlStr = `
+      const ${mergeOptions.customVar} = ${JSON.stringify(gitData)};
+      ${mergeOptions.consoleDirectly ? `console.log(${mergeOptions.customVar})` : ''}
       `;
-      // 将htmlStr插到body里
+
       return [
         {
           tag: 'script',
           attrs: { defer: true },
           children: HtmlStr,
-          injectTo: 'body',
+          injectTo: 'head',
         },
       ];
     },
